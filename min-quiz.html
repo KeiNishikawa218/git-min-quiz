@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gitクイズ ミニゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            touch-action: manipulation;
+        }
+        .quiz-card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        .correct {
+            background-color: #22c55e !important; /* green-500 */
+            color: white;
+            border-color: #16a34a; /* green-600 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* red-500 */
+            color: white;
+            border-color: #dc2626; /* red-600 */
+        }
+        .explanation {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .explanation.show {
+            max-height: 200px;
+        }
+        .git-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        /* Animation Keyframes */
+        @keyframes shake-and-grow {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        @keyframes pulse-effect {
+            0% { transform: scale(1); text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { transform: scale(1.05); text-shadow: 0 0 20px rgba(59, 130, 246, 1); }
+            100% { transform: scale(1); text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        }
+        @keyframes glowing-star {
+            0% { transform: scale(1); text-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #f59e0b; }
+            50% { transform: scale(1.1); text-shadow: 0 0 20px #facc15, 0 0 40px #facc15, 0 0 50px #f59e0b; }
+            100% { transform: scale(1); text-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 0 0 30px #f59e0b; }
+        }
+        @keyframes trophy-bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        .animate-shake {
+            animation: shake-and-grow 0.4s ease-in-out;
+        }
+        .animate-pulse {
+            animation: pulse-effect 1.5s ease-in-out infinite;
+        }
+        .animate-glowing-star {
+            animation: glowing-star 2s ease-in-out infinite;
+            color: #f59e0b; /* amber-500 */
+        }
+        .animate-trophy {
+            animation: trophy-bounce 1s ease;
+        }
+        .trophy-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            color: #f59e0b; /* amber-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="quiz-card bg-white w-full max-w-2xl rounded-2xl p-6 sm:p-8">
+        
+        <div id="quiz-header" class="text-center mb-6">
+            <div class="flex justify-center items-center gap-4 mb-2">
+                 <svg class="git-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 14.5L19 19M14.5 9.5L19 5M4.99998 12C4.99998 9.23858 7.23856 7 9.99998 7C12.7614 7 15 9.23858 15 12C15 14.7614 12.7614 17 9.99998 17C7.23856 17 4.99998 14.7614 4.99998 12Z" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">Gitクイズ ミニゲーム</h1>
+            </div>
+            <div id="progress-bar" class="w-full bg-slate-200 rounded-full h-2.5 mt-4">
+                <div id="progress" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+             <p id="progress-text" class="text-sm text-slate-500 mt-2">問題 1 / 10</p>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-xl font-semibold text-slate-700 mb-6 text-center"></h2>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+        </div>
+
+        <div id="feedback-area" class="mt-6 text-center">
+            <div id="explanation" class="explanation bg-slate-50 border border-slate-200 rounded-lg p-4 text-left">
+                <h3 class="font-bold text-lg mb-2" id="explanation-title"></h3>
+                <p id="explanation-text" class="text-slate-600"></p>
+            </div>
+            <button id="next-btn" class="hidden mt-4 w-full md:w-auto bg-blue-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-blue-700 transition-colors">次の問題へ</button>
+            <button id="show-result-btn" class="hidden mt-4 w-full md:w-auto bg-green-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-green-700 transition-colors">結果を見る</button>
+        </div>
+        
+        <div id="result-area" class="hidden text-center">
+            <svg id="trophy-icon" class="hidden trophy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 2h-13A2.5 2.5 0 003 4.5V10c0 1.625.813 3.162 2.25 4.031V20a2 2 0 002 2h9.5a2 2 0 002-2v-5.969A4.5 4.5 0 0021 10V4.5A2.5 2.5 0 0018.5 2zM12 11.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5zM6 4h3v2H6V4zm9 0h3v2h-3V4z"></path></svg>
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">クイズ終了！</h2>
+            <p id="result-message" class="text-xl text-slate-600 mb-4"></p>
+            <p id="score-text" class="text-5xl font-extrabold text-blue-600 mb-8"></p>
+            <button id="restart-btn" class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 transition-colors">もう一度挑戦！</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "新しいローカルリポジトリを作成する最初のコマンドはどれですか？",
+                options: [ { text: "git clone", correct: false }, { text: "git init", correct: true }, { text: "git start", correct: false }, { text: "git commit", correct: false } ],
+                explanation: "`git init`はカレントディレクトリに新しいGitリポジトリを作成（初期化）するコマンドです。`git clone`は既存のリモートリポジトリをコピーする際に使用します。"
+            },
+            {
+                question: "ファイルの変更をステージングエリアに追加するためのコマンドはどれですか？",
+                options: [ { text: "git commit", correct: false }, { text: "git status", correct: false }, { text: "git add", correct: true }, { text: "git push", correct: false } ],
+                explanation: "`git add`コマンドで、コミットしたいファイルの変更をステージングエリア（コミット対象のリスト）に移動します。"
+            },
+            {
+                question: "現在のブランチから新しいブランチを作成し、そのブランチに切り替えるための最も簡単なコマンドはどれですか？",
+                options: [ { text: "git branch <new-branch>", correct: false }, { text: "git checkout -b <new-branch>", correct: true }, { text: "git switch <new-branch>", correct: false }, { text: "git merge <new-branch>", correct: false } ],
+                explanation: "`git checkout -b <new-branch>`は、新しいブランチの作成と、そのブランチへの切り替えを一度に行います。`-b`オプションがその役割を担います。"
+            },
+            {
+                question: "リモートリポジトリの最新の変更をローカルリポジトリに反映させるためのコマンドはどれですか？",
+                options: [ { text: "git push", correct: false }, { text: "git commit", correct: false }, { text: "git fetch", correct: false }, { text: "git pull", correct: true } ],
+                explanation: "`git pull`はリモートリポジトリから最新の変更を取得（fetch）し、現在のブランチに統合（merge）します。"
+            },
+            {
+                question: "コミットの履歴を確認するためのコマンドはどれですか？",
+                options: [ { text: "git status", correct: false }, { text: "git log", correct: true }, { text: "git diff", correct: false }, { text: "git reflog", correct: false } ],
+                explanation: "`git log`コマンドは、これまでのコミット履歴を新しいものから順に表示します。"
+            },
+            {
+                question: "ステージングエリアにあるファイルの変更を取り消し、ワーキングディレクトリの状態に戻すコマンドはどれですか？",
+                options: [ { text: "git rm --cached <file>", correct: false }, { text: "git checkout -- <file>", correct: false }, { text: "git reset HEAD <file>", correct: true }, { text: "git revert <commit>", correct: false } ],
+                explanation: "`git reset HEAD <file>`は、指定したファイルのステージング（`git add`した状態）を取り消します。ファイル自体の変更内容はワーキングディレクトリに残ります。"
+            },
+            {
+                question: "あるブランチの変更を、現在のブランチに取り込みたい場合、最も一般的に使われるコマンドはどれですか？",
+                options: [ { text: "git rebase", correct: false }, { text: "git checkout", correct: false }, { text: "git merge", correct: true }, { text: "git cherry-pick", correct: false } ],
+                explanation: "`git merge`は、指定したブランチの履歴を現在のブランチに統合し、変更を取り込むための基本的なコマンドです。"
+            },
+            {
+                question: "直前のコミットメッセージを修正したい場合に使用するコマンドはどれですか？",
+                options: [ { text: "git commit --fixup", correct: false }, { text: "git rebase -i HEAD~1", correct: false }, { text: "git commit --amend", correct: true }, { text: "git reset --soft HEAD~1", correct: false } ],
+                explanation: "`--amend`オプションを使うと、直前のコミットを修正できます。メッセージの変更や、ファイルの追加・削除が可能です。"
+            },
+            {
+                question: ".gitignoreファイルは何のために使われますか？",
+                options: [ { text: "特定のユーザーからのコミットを無視するため", correct: false }, { text: "Gitの管理対象から特定のファイルやディレクトリを除外するため", correct: true }, { text: "Gitのコマンドにエイリアス（別名）を設定するため", correct: false }, { text: "ブランチのマージルールを定義するため", correct: false } ],
+                explanation: "ログファイルやビルド生成物など、バージョン管理に含めたくないファイルやディレクトリを`.gitignore`に記述することで、Gitの追跡対象から除外できます。"
+            },
+            {
+                question: "作業を一時的に退避させるために使うコマンドで、ブランチを切り替える前にまだコミットしたくない変更がある場合に便利なものはどれですか？",
+                options: [ { text: "git save", correct: false }, { text: "git stash", correct: true }, { text: "git hold", correct: false }, { text: "git commit -a", correct: false } ],
+                explanation: "`git stash`は、ワーキングディレクトリとステージングエリアの変更を一時的に「隠し場所」に退避させるコマンドです。これにより、クリーンな状態でブランチを切り替えることができます。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const showResultBtn = document.getElementById('show-result-btn');
+        const explanationEl = document.getElementById('explanation');
+        const explanationTitleEl = document.getElementById('explanation-title');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const progressBar = document.getElementById('progress');
+        const progressText = document.getElementById('progress-text');
+        
+        const questionArea = document.getElementById('question-area');
+        const resultArea = document.getElementById('result-area');
+        const scoreTextEl = document.getElementById('score-text');
+        const quizHeader = document.getElementById('quiz-header');
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            questionArea.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            quizHeader.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            showResultBtn.classList.add('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionTextEl.innerHTML = currentQuestion.question.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `問題 ${currentQuestionIndex + 1} / ${quizData.length}`;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerHTML = option.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                button.classList.add('option-btn', 'w-full', 'p-4', 'border-2', 'rounded-lg', 'text-left', 'font-medium', 'text-slate-700', 'bg-white', 'hover:bg-slate-50', 'hover:border-blue-500');
+                if (option.correct) {
+                    button.dataset.correct = true;
+                }
+                button.addEventListener('click', selectAnswer);
+                optionsContainerEl.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            showResultBtn.classList.add('hidden');
+            explanationEl.classList.remove('show');
+            explanationTitleEl.textContent = '';
+            explanationTextEl.textContent = '';
+            while (optionsContainerEl.firstChild) {
+                optionsContainerEl.removeChild(optionsContainerEl.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const isCorrect = selectedBtn.dataset.correct === 'true';
+
+            if (isCorrect) {
+                score++;
+                selectedBtn.classList.add('correct');
+                explanationTitleEl.textContent = '正解！🎉';
+            } else {
+                selectedBtn.classList.add('incorrect');
+                explanationTitleEl.textContent = '不正解...';
+            }
+            
+            explanationTextEl.textContent = quizData[currentQuestionIndex].explanation;
+            explanationEl.classList.add('show');
+
+            Array.from(optionsContainerEl.children).forEach(button => {
+                if (button.dataset.correct === 'true' && !isCorrect) {
+                     button.classList.add('correct');
+                }
+                button.disabled = true;
+            });
+
+            if (quizData.length > currentQuestionIndex + 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                showResultBtn.classList.remove('hidden');
+            }
+        }
+        
+        function showResults() {
+            questionArea.classList.add('hidden');
+            quizHeader.classList.add('hidden');
+            document.getElementById('feedback-area').classList.add('hidden');
+            
+            const resultMessageEl = document.getElementById('result-message');
+            const trophyIconEl = document.getElementById('trophy-icon');
+
+            scoreTextEl.className = 'text-5xl font-extrabold text-blue-600 mb-8';
+            trophyIconEl.classList.add('hidden');
+            trophyIconEl.classList.remove('animate-trophy');
+            resultArea.classList.remove('animate-shake');
+
+            scoreTextEl.textContent = `${score} / ${quizData.length}`;
+
+            if (score === 10) {
+                resultMessageEl.textContent = 'おめでとうございます！Gitマスターですね！素晴らしいです！🎉';
+                scoreTextEl.classList.add('animate-glowing-star');
+                trophyIconEl.classList.remove('hidden');
+                trophyIconEl.classList.add('animate-trophy');
+            } else if (score >= 9) {
+                resultMessageEl.textContent = 'すごいです！あともう一息で完璧でしたね！本当に惜しい！✨';
+                scoreTextEl.classList.add('animate-glowing-star');
+            } else if (score >= 5) {
+                resultMessageEl.textContent = 'いい感じですね！基本はバッチリです。次は満点を目指しましょう！💪';
+                scoreTextEl.classList.add('animate-pulse');
+            } else {
+                resultMessageEl.textContent = 'お疲れ様でした！ここからが伸びしろですね。一緒に頑張りましょう！😊';
+                resultArea.classList.add('animate-shake');
+            }
+
+            resultArea.classList.remove('hidden');
+        }
+        
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            showQuestion();
+        });
+        
+        restartBtn.addEventListener('click', () => {
+            document.getElementById('feedback-area').classList.remove('hidden');
+            startQuiz();
+        });
+
+        showResultBtn.addEventListener('click', showResults);
+
+        startQuiz();
+    </script>
+</body>
+</html>
