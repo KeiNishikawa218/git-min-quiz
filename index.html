@@ -145,8 +145,8 @@
             },
             {
                 question: "現在のブランチから新しいブランチを作成し、そのブランチに切り替えるための最も簡単なコマンドはどれですか？",
-                options: [ { text: "git branch <new-branch>", correct: false }, { text: "git checkout -b <new-branch>", correct: true }, { text: "git switch <new-branch>", correct: false }, { text: "git merge <new-branch>", correct: false } ],
-                explanation: "`git checkout -b <new-branch>`は、新しいブランチの作成と、そのブランチへの切り替えを一度に行います。`-b`オプションがその役割を担います。"
+                options: [ { text: "git branch <new-branch>", correct: false }, { text: "git switch -c <new-branch>", correct: true }, { text: "git switch <new-branch>", correct: false }, { text: "git merge <new-branch>", correct: false } ],
+                explanation: "`git switch -c <new-branch>`は、新しいブランチの作成と、そのブランチへの切り替えを一度に行います。`git checkout -b` も同じ動作をしますが、`checkout`は多機能すぎるため、役割が明確な `switch` の利用が推奨されています。"
             },
             {
                 question: "リモートリポジトリの最新の変更をローカルリポジトリに反映させるためのコマンドはどれですか？",
